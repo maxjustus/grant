@@ -1,4 +1,5 @@
 require File.dirname(__FILE__) + '/spec_helper'
+require 'grant/thread_local'
 
 describe Grant::ThreadLocal do
   it "should properly set and get thread-local variables" do

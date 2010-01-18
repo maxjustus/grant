@@ -1,7 +1,3 @@
-require 'grant/thread_local'
-require 'grant/user'
-require 'grant/base'
-require 'grant/model_audit_manager'
-require 'grant/model_audit'
-require 'grant/model_security_manager'
-require 'grant/model_security'
+module Grant
+  class Error < StandardError; end
+end

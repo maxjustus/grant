@@ -1,4 +1,5 @@
-require File.dirname(__FILE__) + '/spec_helper'
+require 'spec_helper'
+require 'grant/user'
 
 describe Grant::User do
   it "should return the same user that's set on the same thread" do
