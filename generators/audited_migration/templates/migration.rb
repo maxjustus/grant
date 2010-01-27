@@ -12,10 +12,6 @@ class <%= class_name %> < ActiveRecord::Migration
       t.column :changes, :text
       t.column :created_at, :datetime
     end
-
-    add_index :audits, [:auditable_id, :auditable_type], :name => 'auditable_index'
-    add_index :audits, [:user_id, :user_type], :name => 'user_index'
-    add_index :audits, :created_at
   end
 
   def self.down
