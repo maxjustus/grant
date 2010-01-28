@@ -1,7 +1,7 @@
 require 'grant'
 require 'grant/config_parser'
 require 'grant/user'
-require 'grant/security/constraint'
+require 'grant/constraint'
 
 module Grant
   class Enforcer

@@ -1,5 +1,5 @@
 require 'spec_helper'
-require 'grant/security/enforcer'
+require 'grant/enforcer'
 
 describe Grant::Enforcer do
   before(:each) do

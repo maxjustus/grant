@@ -1,5 +1,5 @@
 require 'spec_helper'
-require 'grant/security/constraint'
+require 'grant/constraint'
 
 describe Grant::Constraint do
   

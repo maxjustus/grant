@@ -1,4 +1,4 @@
-require 'grant/security/enforcer'
+require 'grant/enforcer'
 
 module Grant
   module Security
