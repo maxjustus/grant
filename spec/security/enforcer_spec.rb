@@ -1,9 +1,9 @@
 require 'spec_helper'
 require 'grant/security/enforcer'
 
-describe Grant::Security::Enforcer do
+describe Grant::Enforcer do
   before(:each) do
-    @enforcer = Grant::Security::Enforcer.new
+    @enforcer = Grant::Enforcer.new
     @model = Model.new(1)
   end
   

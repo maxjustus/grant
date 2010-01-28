@@ -7,7 +7,7 @@ module Grant
         alias grant_security_has_and_belongs_to_many has_and_belongs_to_many
         alias grant_security_has_many has_many
         
-        write_inheritable_attribute :enforcer, Grant::Security::Enforcer.new
+        write_inheritable_attribute :enforcer, Grant::Enforcer.new
         class_inheritable_reader :enforcer
         
         before_create enforcer

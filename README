@@ -1,28 +1,20 @@
-= Grant
+Grant
+=====
 
-Grant is an easy to use Ruby on Rails plugin for securing and auditing access to your Rails model objects. The main goals of Grant are
+Grant is an easy to use Ruby on Rails plugin for securing access to your Rails model objects. It provides a simple way to declaratively specify rules for granting a user permission to perform CRUD operations on model objects.
 
-* Provide an easy way to declaratively specify rules for granting a user permission to perform CRUD operations on model objects.
-* Provide a simple method to declaratively specify what CRUD operations should be audited and store that audit data with minimal developer effort.
-* Make it simple to specify what attributes of model objects should automatically be audited and which ones should be ignored.
-
-
-= Design Philosophy
-
-Grant currently has two main features, model security and model audit. Each feature has a different design philosophy.
+Design Philosophy
+=================
 
 When designing the model security portion of Grant, we decided that it shouldn't be used to specify which operations were restricted. Instead, it restricts all CRUD operations unless they're explicitly granted to the user. It also restricts adding or removing items from has_many and has_and_belongs_to_many associations. Our experience with security professionals is that they want to feel very comfortable that somebody isn't allowed to see something they shouldn't see or do something they shouldn't do. Only allowing operations explicitly granted forces developers to make conscious security decisions.
 
-Model auditing takes the opposite approach and audits nothing by default. You must specify which operations should be audited and which model attributes should be tracked. We took this "specify what you want to collect" approach after many years of conversation with security professionals. One of the biggest concerns is being overwhelmed with data. Forcing you to specify what should be audited avoids this and makes you carefully consider what is most important to audit.
+Examples
+========
 
-= Examples
-
-== Model Security
-
-The following example demonstrates model security. To enable model security you simply include the Grant::ModelSecurity module in your model class. In this example you see three grant statements. The first grants find (aka read) permission to everyone. The second example grants create, update, and destroy permission when the passed block evaluates to true, which in this case happens when the model is editable by the current user. Similarly, the third grant statement permits additions and removals from the tags association when it's block evaluates to true. A Grant::ModelSecurityError is raised if any grant block evaluates to false or nil.
+The following example demonstrates model security. To enable model security you simply include the Grant::Security module in your model class. In this example you see three grant statements. The first grants find (aka read) permission to everyone. The second example grants create, update, and destroy permission when the passed block evaluates to true, which in this case happens when the model is editable by the current user. Similarly, the third grant statement permits additions and removals from the tags association when it's block evaluates to true. A Grant::ModelSecurityError is raised if any grant block evaluates to false or nil.
 
 	class EditablePage < ActiveRecord::Base
-	  include Grant::ModelSecurity
+	  include Grant::Security
 
 	  has_many :tags
   
@@ -36,40 +28,5 @@ The following example demonstrates model security. To enable model security you 
 	end
 
 There's a lot more to the grant statement than shown in the above example. For instance, you can have multiple grant statements for the same action. Ultimate permission to perform the action will not be granted unless all grant blocks evaluate to true.
-
-== Model Audit
-
-Model auditing is just as easy to specify as model security and makes it a snap to easily collect audit information. It works very similarly to Joshua Clayton's acts_as_auditable plugin. There are two audit calls in the example below. The first declares that create and update actions should be audited for the EditablePage model and the string returned by the passed block should be included as a custom message. The second audit call simply changes the custom message when auditing destroy (aka delete) actions.
-
-	class EditablePage < ActiveRecord::Base
-	  include Grant::ModelAudit
-
-	  has_many :tags
-  
-	  audit(:create, :update) { |model, user| "Editable page modified by #{user.display_name}" }
-	  audit(:destroy) { |model, user| "#{user.display_name} deleted editable page #{model.id}" }
-	end
-
-All audit data is stored in a table named Audits, which is automatically created for you when you run the migration included with the Grant plugin. However, there's a lot more recorded than just the custom message, including:
-
-* auditable_id - the primary key of the table belonging to the audited model object
-* auditable_type - the class type of the audited model object
-* auditable_version - the version number of the audited model object (if versioning is tracked)
-* user_id - the primary key of the table belonging to the user being audited
-* user_type - the class type of the model object representing users in your application
-* action - a string indicating the action that was audited (create, update, destroy, or find)
-* success - a boolean indicating whether the action succeeded or not (this may not be reliable currently)
-* message - the custom message returned by any block passed to the audit call
-* changes - a string containing the before and after state of any model attributes that changed
-* created_at - the date and time the audit record was recorded
-
-The changes column is pretty cool. It automatically serializes the before and after state of any model attributes that change during the action. If there are only a few attributes you want to audit or a couple that you want to prevent from being audited, you can specify that in the audit call. For example
-
-	# Prevent SSN and passwords from being saved in the audit table
-	audit(:create, :destroy, :except => [:ssn, :password])
-
-	# Only audit changes to the title column when destroying/deleting
-	audit(:destroy, :only => :title)
-
 
 Copyright (c) 2009 Near Infinity Corporation, released under the MIT license
