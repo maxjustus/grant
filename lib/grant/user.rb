@@ -11,6 +11,6 @@ module Grant
     module_function :current_user, :current_user=
 
     private
-    @@current_user_symbol = :grant_current_user
+    @@current_user_symbol = :grant_current_user_symbol
   end
 end

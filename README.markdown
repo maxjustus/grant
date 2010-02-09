@@ -11,7 +11,7 @@ When designing the model security portion of Grant, we decided that it shouldn't
 Examples
 ========
 
-The following example demonstrates model security. To enable model security you simply include the Grant::Security module in your model class. In this example you see three grant statements. The first grants find (aka read) permission to everyone. The second example grants create, update, and destroy permission when the passed block evaluates to true, which in this case happens when the model is editable by the current user. Similarly, the third grant statement permits additions and removals from the tags association when it's block evaluates to true. A Grant::ModelSecurityError is raised if any grant block evaluates to false or nil.
+The following example demonstrates model security. To enable model security you simply include the Grant::Security module in your model class. In this example you see three grant statements. The first grants find (aka read) permission to everyone. The second example grants create, update, and destroy permission when the passed block evaluates to true, which in this case happens when the model is editable by the current user. Similarly, the third grant statement permits additions and removals from the tags association when it's block evaluates to true. A Grant::Error is raised if any grant block evaluates to false or nil.
 
 	class EditablePage < ActiveRecord::Base
 	  include Grant::Security
