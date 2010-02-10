@@ -1,5 +1,5 @@
 module Grant
-  module Security
+  module ModelSecurity
     
     def self.included(base)
       base.instance_eval do
