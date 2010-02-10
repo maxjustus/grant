@@ -1,4 +1,5 @@
-require File.dirname(__FILE__) + '/spec_helper'
+require 'spec_helper'
+require 'grant'
 
 describe Grant::ThreadStatus do
   it "should be enabled if set to enabled" do

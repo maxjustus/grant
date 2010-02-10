@@ -5,6 +5,8 @@ require 'spec'
 require 'spec/rake/spectask'
 require 'spec/rake/verify_rcov'
 
+$LOAD_PATH << File.join(File.dirname(__FILE__), 'lib')
+
 desc 'Default: run specs'
 task :default => :spec
 

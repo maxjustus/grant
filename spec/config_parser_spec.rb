@@ -1,5 +1,5 @@
 require 'spec_helper'
-require 'grant/config_parser'
+require 'grant'
 
 describe Grant::ConfigParser do
   
