@@ -30,11 +30,11 @@ module Grant
       Grant::ThreadStatus.disabled? || @grant_disabled
     end
     
-    def grant_raise_error(user, action, model, associated_model=nil)
+    def grant_raise_error(user, action, model, association_id=nil, associated_model=nil)
       msg = ["#{action} permission",
         "not granted to #{user.class.name}:#{user.id}",
         "for resource #{model.class.name}:#{model.id}"]
-      msg.insert(1, "to #{association_id}:#{associated_model.class.name} association") if associated_model
+      msg.insert(1, "to #{association_id}:#{associated_model.class.name} association") if association_id && associated_model
 
       raise Grant::Error.new(msg.join(' '))
     end
@@ -47,7 +47,7 @@ module Grant
           Array(association_ids).each do |association_id|
             grant_callback = "grant_#{action}_#{association_id}".to_sym
             define_method(grant_callback) do |associated_model|
-              grant_raise_error(grant_current_user, action, self, associated_model) unless grant_disabled? || blk.call(grant_current_user, self, associated_model)
+              grant_raise_error(grant_current_user, action, self, association_id, associated_model) unless grant_disabled? || blk.call(grant_current_user, self, associated_model)
             end
           end
         end
@@ -61,24 +61,24 @@ module Grant
       end
     
       def has_and_belongs_to_many(association_id, options={}, &extension)
-        add_association_callback(:add, association_id, options)
-        add_association_callback(:remove, association_id, options)
+        add_grant_association_callback(:add, association_id, options)
+        add_grant_association_callback(:remove, association_id, options)
         grant_security_has_and_belongs_to_many(association_id, options, &extension)
       end
     
       def has_many(association_id, options={}, &extension)
-        add_association_callback(:add, association_id, options)
-        add_association_callback(:remove, association_id, options)
+        add_grant_association_callback(:add, association_id, options)
+        add_grant_association_callback(:remove, association_id, options)
         grant_security_has_many(association_id, options, &extension)
       end
     
       private
     
-        def add_association_callback(action, association_id, options)
+        def add_grant_association_callback(action, association_id, options)
           callback_name = "before_#{action}".to_sym
           callback = "grant_#{action}_#{association_id}".to_sym
           define_method(callback) do |associated_model|
-            grant_raise_error(grant_current_user, action, self, associated_model) unless grant_disabled?
+            grant_raise_error(grant_current_user, action, self, association_id, associated_model) unless grant_disabled?
           end
       
           if options.has_key? callback_name

@@ -16,6 +16,19 @@ module Grant
       result
     end
     
+    def with_grant
+      previously_disabled = grant_disabled?
+      enable_grant
+      
+      begin
+        result = yield if block_given?
+      ensure
+        disable_grant if previously_disabled
+      end
+      
+      result
+    end
+    
     def disable_grant
       Grant::ThreadStatus.disable
     end
