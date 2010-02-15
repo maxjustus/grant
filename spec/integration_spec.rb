@@ -1,5 +1,5 @@
 require 'spec_helper'
-require 'grant/integration'
+require 'grant'
 
 describe Grant::Integration do
   include Grant::Integration
@@ -43,6 +43,24 @@ describe Grant::Integration do
       Grant::ThreadStatus.should be_disabled
     end
     grant_disabled?.should be_true
+  end
+  
+  it "should be able to execute a block of code with grant temporarily enabled but switched back to disabled afterwards" do
+    disable_grant
+    with_grant do
+      grant_enabled?.should be_true
+      Grant::ThreadStatus.should be_enabled
+    end
+    grant_disabled?.should be_true
+  end
+  
+  it "should be able to execute a block of code with grant enabled and remain enabled afterwards if it was beforehand" do
+    enable_grant
+    with_grant do
+      grant_enabled?.should be_true
+      Grant::ThreadStatus.should be_enabled
+    end
+    grant_enabled?.should be_true
   end
   
 end
