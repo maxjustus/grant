@@ -2,6 +2,12 @@ require 'grant'
 
 describe Grant::ModelSecurity do
   
+  before(:each) do
+    Grant::User.current_user = (Class.new do
+      def id; 1 end
+    end).new
+  end
+  
   describe 'module include' do
     it 'should establish failing ActiveRecord callbacks for before_create, before_update, before_destroy, and after_find when included' do
       class TestModel; end
@@ -15,6 +21,7 @@ describe Grant::ModelSecurity do
         include Grant::ModelSecurity
       end
       instance = TestModel.new
+      instance.stub!(:id).and_return(1)
       lambda { instance.grant_before_create }.should raise_error(Grant::Error)
       lambda { instance.grant_before_update }.should raise_error(Grant::Error)
       lambda { instance.grant_before_destroy }.should raise_error(Grant::Error)
@@ -28,10 +35,10 @@ describe Grant::ModelSecurity do
         has_and_belongs_to_many :groups
       end
       instance = c.new
-      lambda { instance.grant_add_users }.should raise_error(Grant::Error)
-      lambda { instance.grant_remove_users }.should raise_error(Grant::Error)
-      lambda { instance.grant_add_groups }.should raise_error(Grant::Error)
-      lambda { instance.grant_remove_groups }.should raise_error(Grant::Error)
+      lambda { instance.grant_add_users(new_model_class) }.should raise_error(Grant::Error)
+      lambda { instance.grant_remove_users(new_model_class) }.should raise_error(Grant::Error)
+      lambda { instance.grant_add_groups(new_model_class) }.should raise_error(Grant::Error)
+      lambda { instance.grant_remove_groups(new_model_class) }.should raise_error(Grant::Error)
     end
   end
   
@@ -66,10 +73,10 @@ describe Grant::ModelSecurity do
         grant(:add => [:users, :groups]) { true }
       end
       instance = c.new
-      lambda { instance.grant_add_users }.should_not raise_error(Grant::Error)
-      lambda { instance.grant_remove_users }.should raise_error(Grant::Error)
-      lambda { instance.grant_add_groups }.should_not raise_error(Grant::Error)
-      lambda { instance.grant_remove_groups }.should raise_error(Grant::Error)
+      lambda { instance.grant_add_users(new_model_class) }.should_not raise_error(Grant::Error)
+      lambda { instance.grant_remove_users(new_model_class) }.should raise_error(Grant::Error)
+      lambda { instance.grant_add_groups(new_model_class) }.should_not raise_error(Grant::Error)
+      lambda { instance.grant_remove_groups(new_model_class) }.should raise_error(Grant::Error)
     end
     
     it 'should allow removing from an association to succeed when granted' do
@@ -80,10 +87,10 @@ describe Grant::ModelSecurity do
         grant(:remove => [:users, :groups]) { true }
       end
       instance = c.new
-      lambda { instance.grant_add_users }.should raise_error(Grant::Error)
-      lambda { instance.grant_remove_users }.should_not raise_error(Grant::Error)
-      lambda { instance.grant_add_groups }.should raise_error(Grant::Error)
-      lambda { instance.grant_remove_groups }.should_not raise_error(Grant::Error)
+      lambda { instance.grant_add_users(new_model_class) }.should raise_error(Grant::Error)
+      lambda { instance.grant_remove_users(new_model_class) }.should_not raise_error(Grant::Error)
+      lambda { instance.grant_add_groups(new_model_class) }.should raise_error(Grant::Error)
+      lambda { instance.grant_remove_groups(new_model_class) }.should_not raise_error(Grant::Error)
     end
     
     def verify_standard_callbacks(*succeeding_callbacks)
@@ -103,6 +110,7 @@ describe Grant::ModelSecurity do
   
   def new_model_class
     c = Class.new do
+      def id; 1 end
       def self.has_and_belongs_to_many(association_id, options={}, &extension); end
       def self.has_many(association_id, options={}, &extension); end
       def self.before_create(*args); end
