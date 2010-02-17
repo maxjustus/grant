@@ -17,9 +17,9 @@ module Grant
       end
     
       def self.validate_config(actions, associations)
-        raise Grant::Error.new "at least one :create, :find, :update, or :destroy action must be specified" if actions.empty? && associations.empty?
-        raise Grant::Error.new ":create, :find, :update, and :destroy are the only valid actions" unless actions.all? { |a| [:create, :find, :update, :destroy].include? a }
-        raise Grant::Error.new ":add and :remove are the only valid association specifications" unless associations.keys.all? { |k| [:add, :remove].include? k }
+        raise Grant::Error.new("at least one :create, :find, :update, or :destroy action must be specified") if actions.empty? && associations.empty?
+        raise Grant::Error.new(":create, :find, :update, and :destroy are the only valid actions") unless actions.all? { |a| [:create, :find, :update, :destroy].include? a }
+        raise Grant::Error.new(":add and :remove are the only valid association specifications") unless associations.keys.all? { |k| [:add, :remove].include? k }
       end
      
   end
