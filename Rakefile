@@ -1,6 +1,6 @@
 require 'rake'
 require 'rake/rdoctask'
-gem "rspec", "1.2.9"
+gem "rspec", ">=1.2.9"
 require 'spec'
 require 'spec/rake/spectask'
 require 'spec/rake/verify_rcov'
