@@ -19,11 +19,7 @@ describe Grant::ModelSecurity do
         has_many :users
         has_and_belongs_to_many :groups
       end
-      instance = c.new
-      lambda { instance.grant_add_users(new_model_class) }.should raise_error(Grant::Error)
-      lambda { instance.grant_remove_users(new_model_class) }.should raise_error(Grant::Error)
-      lambda { instance.grant_add_groups(new_model_class) }.should raise_error(Grant::Error)
-      lambda { instance.grant_remove_groups(new_model_class) }.should raise_error(Grant::Error)
+      verify_association_callbacks(c.new)
     end
   end
   
@@ -66,11 +62,17 @@ describe Grant::ModelSecurity do
         has_and_belongs_to_many :groups
         grant(:add => [:users, :groups]) { true }
       end
-      instance = c.new
-      lambda { instance.grant_add_users(new_model_class) }.should_not raise_error(Grant::Error)
-      lambda { instance.grant_remove_users(new_model_class) }.should raise_error(Grant::Error)
-      lambda { instance.grant_add_groups(new_model_class) }.should_not raise_error(Grant::Error)
-      lambda { instance.grant_remove_groups(new_model_class) }.should raise_error(Grant::Error)
+      verify_association_callbacks(c.new, :add_users, :add_groups)
+    end
+    
+    it 'should allow adding to an association to succeed when granted above association declarations' do
+      c = new_model_class
+      c.instance_eval do
+        grant(:add => [:users, :groups]) { true }
+        has_many :users
+        has_and_belongs_to_many :groups
+      end
+      verify_association_callbacks(c.new, :add_users, :add_groups)
     end
     
     it 'should allow removing from an association to succeed when granted' do
@@ -80,19 +82,32 @@ describe Grant::ModelSecurity do
         has_and_belongs_to_many :groups
         grant(:remove => [:users, :groups]) { true }
       end
-      instance = c.new
-      lambda { instance.grant_add_users(new_model_class) }.should raise_error(Grant::Error)
-      lambda { instance.grant_remove_users(new_model_class) }.should_not raise_error(Grant::Error)
-      lambda { instance.grant_add_groups(new_model_class) }.should raise_error(Grant::Error)
-      lambda { instance.grant_remove_groups(new_model_class) }.should_not raise_error(Grant::Error)
+      verify_association_callbacks(c.new, :remove_users, :remove_groups)
+    end
+
+    it 'should allow removing from an association to succeed when granted above association declarations' do
+      c = new_model_class
+      c.instance_eval do
+        grant(:remove => [:users, :groups]) { true }
+        has_many :users
+        has_and_belongs_to_many :groups
+      end
+      verify_association_callbacks(c.new, :remove_users, :remove_groups)
     end
   end
   
   def verify_standard_callbacks(instance, *succeeding_callbacks)
-    succeeding_callbacks = Array(succeeding_callbacks)
-    [:create, :update, :destroy, :find].each do |action|
+    verify_callbacks([:create, :update, :destroy, :find], instance, nil, succeeding_callbacks)
+  end
+  
+  def verify_association_callbacks(instance, *succeeding_callbacks)
+    verify_callbacks([:add_users, :remove_users, :add_groups, :remove_groups], instance, new_model_class.new, succeeding_callbacks)
+  end
+  
+  def verify_callbacks(all_actions, instance, associated_model, succeeding_callbacks)
+    all_actions.each do |action|
       expectation = succeeding_callbacks.include?(action) ? :should_not : :should
-      lambda { instance.send(action) }.send(expectation, raise_error(Grant::Error))
+      lambda { instance.send(action, associated_model) }.send(expectation, raise_error(Grant::Error))
     end
   end
   
@@ -123,19 +138,19 @@ describe Grant::ModelSecurity do
     
     def self.has_many(association_id, options, &extension)
       define_method("add_#{association_id}".to_sym) do |associated_model|
-        Array(options[:before_add]).each { |callback| callback.call(associated_model) }
+        Array(options[:before_add]).each { |callback| send(callback, associated_model) }
       end
       define_method("remove_#{association_id}".to_sym) do |associated_model|
-        Array(options[:before_remove]).each { |callback| callback.call(associated_model) }
+        Array(options[:before_remove]).each { |callback| send(callback, associated_model) }
       end
     end
     
     def self.has_and_belongs_to_many(association_id, options, &extension)
       define_method("add_#{association_id}".to_sym) do |associated_model|
-        Array(options[:before_add]).each { |callback| callback.call(associated_model) }
+        Array(options[:before_add]).each { |callback| send(callback, associated_model) }
       end
       define_method("remove_#{association_id}".to_sym) do |associated_model|
-        Array(options[:before_remove]).each { |callback| callback.call(associated_model) }
+        Array(options[:before_remove]).each { |callback| send(callback, associated_model) }
       end
     end
   end

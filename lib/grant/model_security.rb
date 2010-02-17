@@ -77,8 +77,10 @@ module Grant
         def add_grant_association_callback(action, association_id, options)
           callback_name = "before_#{action}".to_sym
           callback = "grant_#{action}_#{association_id}".to_sym
-          define_method(callback) do |associated_model|
-            grant_raise_error(grant_current_user, action, self, association_id, associated_model) unless grant_disabled?
+          unless self.instance_methods.include? callback.to_s
+            define_method(callback) do |associated_model|
+              grant_raise_error(grant_current_user, action, self, association_id, associated_model) unless grant_disabled?
+            end
           end
       
           if options.has_key? callback_name
