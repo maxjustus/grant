@@ -70,7 +70,9 @@ describe Grant::ModelSecurity do
       c.instance_eval do
         grant(:add => [:users, :groups]) { true }
         has_many :users
-        has_and_belongs_to_many :groups
+        has_and_belongs_to_many :groups, :before_add => [:bogus1, :bogus2]
+        define_method(:bogus1) {}
+        define_method(:bogus2) {}
       end
       verify_association_callbacks(c.new, :add_users, :add_groups)
     end
@@ -79,8 +81,9 @@ describe Grant::ModelSecurity do
       c = new_model_class
       c.instance_eval do
         has_many :users
-        has_and_belongs_to_many :groups
+        has_and_belongs_to_many :groups, :before_remove => :bogus1
         grant(:remove => [:users, :groups]) { true }
+        define_method(:bogus1) {}
       end
       verify_association_callbacks(c.new, :remove_users, :remove_groups)
     end
