@@ -1,24 +1,28 @@
 Grant
 =====
 
-Grant is an easy to use Ruby on Rails plugin for securing access to your Rails model objects. It provides a simple way to declaratively specify rules for granting a user permission to perform CRUD operations on model objects. 
+Grant is an easy to use Ruby on Rails plugin for securing access to your Rails model objects. It provides a declaratively method to specify rules for granting permission to perform CRUD operations on model objects. 
 
-Design Philosophy
-=================
+Grant does not allow you to specify which operations are restricted. Instead, it restricts all CRUD operations unless they're explicitly granted to the user. It also restricts adding or removing items to/from has_many and has_and_belongs_to_many associations. Only allowing operations explicitly granted forces you to make conscious security decisions. Grant will not help you make those decisions, but it won't let you forget to.
 
-When designing the model security portion of Grant, we decided that it shouldn't be used to specify which operations were restricted. Instead, it restricts all CRUD operations and unless they're explicitly granted to the user. It also restricts adding or removing items from has_many and has_and_belongs_to_many associations. Only allowing operations explicitly granted forces you to make conscious security decisions.
+Installation
+============
 
-Examples
-========
+Grant is installed as a Rails plugin
+  
+  script/plugin install git://github.com/nearinfinity/grant.git
 
-The following example demonstrates model security. To enable model security you simply include the Grant::ModelSecurity module in your model class. In this example you see three grant statements. The first grants find (aka read) permission to everyone. The second example grants create, update, and destroy permission when the passed block evaluates to true, which in this case happens when the model is editable by the current user. Similarly, the third grant statement permits additions and removals from the tags association when it's block evaluates to true. A Grant::Error is raised if any grant block evaluates to false or nil.
+Usage
+=====
+
+To enable model security you simply include the Grant::ModelSecurity module in your model class. In the example below you see three grant statements. The first grants find (aka read) permission all the time. The second example grants create, update, and destroy permission when the passed block evaluates to true, which in this case happens when the model is editable by the current user. Similarly, the third grant statement permits additions and removals from the tags association when it's block evaluates to true. A Grant::Error is raised if any grant block evaluates to false or nil.
 
 	class Book < ActiveRecord::Base
 	  include Grant::ModelSecurity
 
 	  has_many :tags
   
-	  grant(:find) { true }
+	  grant(:find)
 	  grant(:create, :update, :destroy) { |user, model| model.editable_by_user? user }
 	  grant(:add => :tags, :remove => :tags) { |user, model, associated_model| model.editable_by_user? user }
 
@@ -27,6 +31,20 @@ The following example demonstrates model security. To enable model security you 
 	  end
 	end
 
-There's a lot more to the grant statement than shown in the above example. For instance, you can have multiple grant statements for the same action. Ultimate permission to perform the action will not be granted unless all grant blocks evaluate to true.
+The valid actions to pass to a grant statement are :find, :create, :update, :destroy, :add, and :remove. The first four options are passed as symbols while :add and :remove are hash keys to association names they protect. Any number of options can be passed to a single grant statement, which is very useful if each of the actions share the same logic for determining access.
+
+Integration
+===========
+
+There may be some instances where you need to perform an action on your model object without Grant stepping in and stopping you. In those cases you can include the Grant::Integration module for help.
+
+  class BooksController < ApplicationController
+    include Grant::Integration
+    
+    def update
+      book = Book.find(params[:id])
+      without_grant { book.update_attributes(params[:book]) } # Grant is disabled for the entire block
+    end
+  end
 
 Copyright (c) 2010 Near Infinity Corporation, released under the MIT license
