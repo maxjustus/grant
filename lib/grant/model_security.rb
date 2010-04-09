@@ -2,15 +2,14 @@ module Grant
   module ModelSecurity
     
     def self.included(base)
-      base.instance_eval do
-        [:create, :update, :destroy, :find].each do |action|
-          callback = (action == :find ? "after_#{action}" : "before_#{action}").to_sym
-          grant_callback = "grant_#{callback}".to_sym
-          define_method(grant_callback) do
-            grant_raise_error(grant_current_user, action, self) unless grant_disabled?
+      [:create, :update, :destroy, :find].each do |action|
+        callback = (action == :find ? "after_#{action}" : "before_#{action}")
+        base.class_eval <<-RUBY
+          def grant_#{callback}
+            grant_raise_error(grant_current_user, '#{action}', self) unless grant_disabled?
           end
-          send callback, grant_callback
-        end
+        RUBY
+        base.send callback.to_sym, "grant_#{callback}".to_sym
       end
     
       base.extend ClassMethods
@@ -75,9 +74,11 @@ module Grant
           callback_name = "before_#{action}".to_sym
           callback = "grant_#{action}_#{association_id}".to_sym
           unless self.instance_methods.include? callback.to_s
-            define_method(callback) do |associated_model|
-              grant_raise_error(grant_current_user, action, self, association_id, associated_model) unless grant_disabled?
-            end
+            class_eval <<-RUBY
+              def #{callback}(associated_model)
+                grant_raise_error(grant_current_user, '#{action}', self, '#{association_id}', associated_model) unless grant_disabled?
+              end
+            RUBY
           end
       
           if options.has_key? callback_name
