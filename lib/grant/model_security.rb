@@ -3,11 +3,8 @@ module Grant
     
     def self.included(base)
       base.instance_eval do
-        alias grant_security_has_and_belongs_to_many has_and_belongs_to_many
-        alias grant_security_has_many has_many
-      
         [:create, :update, :destroy, :find].each do |action|
-          callback = (action == :find ? "after_#{action}".to_sym : "before_#{action}".to_sym)
+          callback = (action == :find ? "after_#{action}" : "before_#{action}").to_sym
           grant_callback = "grant_#{callback}".to_sym
           define_method(grant_callback) do
             grant_raise_error(grant_current_user, action, self) unless grant_disabled?
@@ -53,7 +50,7 @@ module Grant
         end
       
         actions.each do |action|
-          grant_callback = (action.to_sym == :find ? "grant_after_find".to_sym : "grant_before_#{action}".to_sym)
+          grant_callback = (action.to_sym == :find ? "grant_after_find" : "grant_before_#{action}").to_sym
           define_method(grant_callback) do
             grant_raise_error(grant_current_user, action, self) unless grant_disabled? || blk.call(grant_current_user, self)
           end
@@ -63,13 +60,13 @@ module Grant
       def has_and_belongs_to_many(association_id, options={}, &extension)
         add_grant_association_callback(:add, association_id, options)
         add_grant_association_callback(:remove, association_id, options)
-        grant_security_has_and_belongs_to_many(association_id, options, &extension)
+        super
       end
     
       def has_many(association_id, options={}, &extension)
         add_grant_association_callback(:add, association_id, options)
         add_grant_association_callback(:remove, association_id, options)
-        grant_security_has_many(association_id, options, &extension)
+        super
       end
     
       private
