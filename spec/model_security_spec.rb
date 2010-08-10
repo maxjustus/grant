@@ -25,33 +25,33 @@ describe Grant::ModelSecurity do
   
   describe '#grant' do
     it 'should allow after_find callback to succeed when granted' do
-      c = new_model_class.instance_eval { grant(:find); self }
+      c = new_model_class.instance_eval { grant(:find) { true }; self }
       verify_standard_callbacks(c.new, :find)
     end
     
     it 'should allow before_create callback to succeed when granted' do
-      c = new_model_class.instance_eval { grant(:create); self }
+      c = new_model_class.instance_eval { grant(:create) { true }; self }
       verify_standard_callbacks(c.new, :create)
     end
     
     it 'should allow before_update callback to succeed when granted' do
-      c = new_model_class.instance_eval { grant(:update); self }
+      c = new_model_class.instance_eval { grant(:update) { true }; self }
       verify_standard_callbacks(c.new, :update)
     end
     
     it 'should allow before_destroy callback to succeed when granted' do
-      c = new_model_class.instance_eval { grant(:destroy); self }
+      c = new_model_class.instance_eval { grant(:destroy) { true }; self }
       verify_standard_callbacks(c.new, :destroy)
     end
     
     it 'should allow multiple callbacks to be specified with one grant statment' do
-      c = new_model_class.instance_eval { grant(:create, :update); self }
+      c = new_model_class.instance_eval { grant(:create, :update) { true }; self }
       verify_standard_callbacks(c.new, :create, :update)
       
-      c = new_model_class.instance_eval { grant(:create, :update, :destroy); self }
+      c = new_model_class.instance_eval { grant(:create, :update, :destroy) { true }; self }
       verify_standard_callbacks(c.new, :create, :update, :destroy)
       
-      c = new_model_class.instance_eval { grant(:create, :update, :destroy, :find); self }
+      c = new_model_class.instance_eval { grant(:create, :update, :destroy, :find) { true }; self }
       verify_standard_callbacks(c.new, :create, :update, :destroy, :find)
     end
     
