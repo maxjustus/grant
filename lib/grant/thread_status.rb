@@ -1,3 +1,5 @@
+require 'grant/thread_local'
+
 module Grant
   module ThreadStatus
     

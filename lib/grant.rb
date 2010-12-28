@@ -1,9 +1,7 @@
-require 'grant/config_parser'
-require 'grant/model_security'
-require 'grant/thread_local'
-require 'grant/thread_status'
-require 'grant/user'
 require 'grant/integration'
+require 'grant/model_security'
+require 'grant/user'
+require 'grant/version'
 
 module Grant
   class Error < StandardError; end

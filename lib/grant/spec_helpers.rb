@@ -1,3 +1,5 @@
+require 'grant/integration'
+
 module Grant
   module SpecHelpers
     include Grant::Integration
