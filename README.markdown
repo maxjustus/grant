@@ -1,14 +1,26 @@
 Grant
 =====
 
-Grant is an easy to use Ruby on Rails plugin for securing access to your Rails model objects. It provides a declaratively method to specify rules for granting permission to perform CRUD operations on model objects. 
+Grant is a Ruby gem and Rails plugin for securing access to your ActiveRecord model objects. It provides a declarative way to specify rules for granting permission to perform CRUD operations on model objects. 
 
 Grant does not allow you to specify which operations are restricted. Instead, it restricts all CRUD operations unless they're explicitly granted to the user. It also restricts adding or removing items to/from has_many and has_and_belongs_to_many associations. Only allowing operations explicitly granted forces you to make conscious security decisions. Grant will not help you make those decisions, but it won't let you forget to.
 
 Installation
 ============
 
-Grant is installed as a Rails plugin
+To install the Grant gem, simply run
+
+  gem install grant
+  
+To use it with a Rails 3 project or other project using Bundler, add the following line to your Gemfile
+
+  gem 'grant'
+  
+For your Rails 2.x project, add the following to your environment.rb file
+
+  config.gem 'grant'
+
+Lastly, Grant can also be installed as a Rails plugin
   
   script/plugin install git://github.com/nearinfinity/grant.git
 

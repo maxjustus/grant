@@ -1,29 +1,22 @@
+$:.unshift File.expand_path("../lib", __FILE__)
+
 require 'rake'
 require 'rake/rdoctask'
-gem "rspec", ">=1.2.9"
-require 'spec'
-require 'spec/rake/spectask'
-require 'spec/rake/verify_rcov'
-
-$LOAD_PATH << File.join(File.dirname(__FILE__), 'lib')
+require 'rspec/core/rake_task'
 
 desc 'Default: run specs'
 task :default => :spec
 
 desc "Run specs"
-Spec::Rake::SpecTask.new do |t|
-  t.spec_opts = ['--options', "\"#{File.dirname(__FILE__)}/spec/spec.opts\""]
-  t.spec_files = FileList["spec/**/*_spec.rb"]
+RSpec::Core::RakeTask.new do |t|
+  t.rspec_opts = %w(-fs --color)
 end
 
-desc "Run all specs in spec directory with RCov"
-Spec::Rake::SpecTask.new(:rcov) do |t|
-  t.spec_opts = ['--options', "\"#{File.dirname(__FILE__)}/spec/spec.opts\""]
-  t.spec_files = FileList['spec/**/*_spec.rb']
+desc "Run specs with RCov"
+RSpec::Core::RakeTask.new(:rcov) do |t|
+  t.rspec_opts = %w(-fs --color)
   t.rcov = true
-  t.rcov_opts = lambda do
-    IO.readlines(File.dirname(__FILE__) + "/spec/rcov.opts").map {|l| l.chomp.split " "}.flatten
-  end
+  t.rcov_opts = %w(--exclude "spec/*,gems/*")
 end
 
 desc 'Generate documentation for the grant plugin.'
@@ -31,6 +24,14 @@ Rake::RDocTask.new(:rdoc) do |rdoc|
   rdoc.rdoc_dir = 'rdoc'
   rdoc.title    = 'Grant'
   rdoc.options << '--line-numbers' << '--inline-source'
-  rdoc.rdoc_files.include('README')
+  rdoc.rdoc_files.include('README.markdown')
   rdoc.rdoc_files.include('lib/**/*.rb')
+end
+
+task :build do
+  system "gem build grant.gemspec"
+end
+ 
+task :release => :build do
+  system "gem push grant-#{Grant::VERSION}"
 end
