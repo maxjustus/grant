@@ -17,6 +17,6 @@ Gem::Specification.new do |s|
  
   s.add_development_dependency "rspec"
  
-  s.files        = Dir.glob("{lib}/**/*") + %w(MIT-LICENSE README.markdown)
+  s.files        = Dir.glob("{lib}/**/*") + %w(LICENSE README.rdoc)
   s.require_path = 'lib'
 end
