@@ -1,4 +1,4 @@
-require 'spec_helper'
+require File.dirname(__FILE__) + '/spec_helper'
 require 'grant/user'
 
 describe Grant::User do
