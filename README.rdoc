@@ -1,8 +1,10 @@
 = Grant
 
-Grant is a Ruby gem and Rails plugin for securing access to your ActiveRecord model objects. It provides a declarative way to specify rules for granting permission to perform CRUD operations on model objects. 
+Grant is a Ruby gem and Rails plugin that forces you to make explicit security decisions about the operations performed on your ActiveRecord models. It provides a declarative way to specify rules granting permission to perform CRUD operations on ActiveRecord objects. 
 
 Grant does not allow you to specify which operations are restricted. Instead, it restricts all CRUD operations unless they're explicitly granted to the user. It also restricts adding or removing items to/from has_many and has_and_belongs_to_many associations. Only allowing operations explicitly granted forces you to make conscious security decisions. Grant will not help you make those decisions, but it won't let you forget to.
+
+Additional information beyond that found in this README is available on the wiki[https://github.com/nearinfinity/grant/wiki].
 
 = Installation
 
@@ -22,6 +24,20 @@ Lastly, Grant can also be installed as a Rails plugin
   
   script/plugin install git://github.com/nearinfinity/grant.git
 
+= Setup
+
+Grant needs to know who the current user is, but with no standard for doing so you'll have to do a little work to set things up. You simply need to set your current user model object as the Grant current user before any CRUD operations are performed. For example, in a Rails application you could add the following to your application_controller.rb
+
+  class ApplicationController < ActionController::Base
+    before_filter :set_current_user
+    
+    private
+    
+    def set_current_user
+      Grant::User.current_user = @current_user
+    end
+  end
+
 = Usage
 
 To enable model security you simply include the Grant::ModelSecurity module in your model class. In the example below you see three grant statements. The first grants find (aka read) permission all the time. The second example grants create, update, and destroy permission when the passed block evaluates to true, which in this case happens when the model is editable by the current user. Similarly, the third grant statement permits additions and removals from the tags association when it's block evaluates to true. A Grant::Error is raised if any grant block evaluates to false or nil.
@@ -30,7 +46,7 @@ To enable model security you simply include the Grant::ModelSecurity module in y
     include Grant::ModelSecurity
     
     has_many :tags
-    grant(:find)
+    grant(:find) { true }
     grant(:create, :update, :destroy) { |user, model| model.editable_by_user? user }
     grant(:add => :tags, :remove => :tags) { |user, model, associated_model| model.editable_by_user? user }
     
