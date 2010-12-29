@@ -19,7 +19,7 @@ RSpec::Core::RakeTask.new(:rcov) do |t|
   t.rcov_opts = %w(--exclude "spec/*,gems/*")
 end
 
-desc 'Generate documentation for the grant plugin.'
+desc 'Generate documentation for the gem.'
 Rake::RDocTask.new(:rdoc) do |rdoc|
   rdoc.rdoc_dir = 'rdoc'
   rdoc.title    = 'Grant'
