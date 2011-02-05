@@ -31,22 +31,20 @@ module Grant
           granted = false
           ungranted_attributes = Hash[*self.changed.collect {|c| [c, nil]}.flatten]
 
-          self.class.granted_permissions.each do |attrs_and_blk|
-            attrs = attrs_and_blk[0]
-            blk = attrs_and_blk[1]
-            attrs.each do |attr|
-              if grant_disabled?
-                granted = true
-              elsif self.changed.include?(attr)
-                if blk.call(grant_current_user, self)
+          if grant_disabled?
+            granted = true
+            ungranted_attributes = {}
+          else
+            self.class.granted_permissions.each do |attrs_and_blk|
+              attrs = attrs_and_blk[0]
+              blk = attrs_and_blk[1]
+              attrs.each do |attr|
+                if self.changed.include?(attr) && blk.call(grant_current_user, self)
                   granted = true
+                  ungranted_attributes.delete(attr)
                 else
                   granted = false
                 end
-              end
-
-              if granted
-                ungranted_attributes.delete(attr)
               end
             end
           end

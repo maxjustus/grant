@@ -43,6 +43,21 @@ describe Grant::ModelAttributeSecurity do
       verify_standard_callbacks(c.new)
     end
 
+    it 'should respect grant_disabled' do
+      c = new_model_class.instance_eval do
+        grant_attributes(:name) { false }
+        self
+      end
+
+      c.class_eval do
+        def grant_disabled?
+          true
+        end
+      end
+
+      verify_standard_callbacks(c.new, :create, :update)
+    end
+
     it 'should deny update of attributes where grant user may not update a changed attribute' do
       c = new_model_class.instance_eval do
         grant_attributes(:name) { false }

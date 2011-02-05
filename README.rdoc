@@ -65,7 +65,7 @@ To enable model attribute security you simply include the Grant::ModelAttributeS
     grant_attributes(:title) { true }
     grant_attributes(:list_in_store, :price) { |user, model| model.owned_by_user? user }
     
-    def owned_by_user? user
+    def owned_by_user?(user)
       user.administrator? || user.owns?(self)
     end
   end
