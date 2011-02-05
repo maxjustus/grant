@@ -70,7 +70,7 @@ To enable model attribute security you simply include the Grant::ModelAttributeS
     end
   end
 
-It is also perfectly possible to use model security and model attribute security in conjunction. The example below grants any user the ability to find and create, but only owners and administrators to update or destroy. It also grants any user the ability to update user_id when the book is a new record, but only administrators if it is not new. It grants anyone the ability to update :title and :price if the record is new or they own it, but it only allows administrators to update the list_in_store attribute
+It is also possible to use model security and model attribute security in conjunction. The example below grants any user the ability to find and create, but only owners and administrators to update or destroy. It also grants any user the ability to update user_id when the book is a new record, but only administrators if it is not new. It grants anyone the ability to update :title and :price if the record is new or they own it, but it only allows administrators to update the list_in_store attribute
 
   class Book < ActiveRecord::Base
     include Grant::ModelSecurity
