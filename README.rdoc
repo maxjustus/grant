@@ -49,7 +49,7 @@ To enable model security you simply include the Grant::ModelSecurity module in y
     grant(:find) { true }
     grant(:create, :update, :destroy) { |user, model| model.editable_by_user? user }
     
-    def editable_by_user? user
+    def editable_by_user?(user)
       user.administrator? || user.has_role?(:editor) 
     end
   end
@@ -84,7 +84,7 @@ It is also possible to use model security and model attribute security in conjun
     grant_attributes(:user_id) { |user, model| model.new_record? || user.administrator? }
     grant_attributes(:list_in_store) { |user, model| user.administrator? }
     
-    def owned_by_user? user
+    def owned_by_user?(user)
       user.administrator? || user.owns?(self)
     end
   end
