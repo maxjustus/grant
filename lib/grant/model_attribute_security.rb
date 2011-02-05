@@ -1,4 +1,3 @@
-require 'grant/config_parser'
 require 'grant/user'
 require 'grant/thread_status'
 require 'grant/model_security'
