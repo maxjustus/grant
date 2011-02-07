@@ -9,17 +9,17 @@ module Grant
     def granted_attributes(*attrs_and_args)
       if attrs_and_args.last.instance_of?(Hash)
         args = attrs_and_args.pop
-        args = Hash[args.collect {|k,v| [k.to_sym, v]}]
+        args = Hash[args.collect {|option,value| [option.to_sym, value]}]
       else
         args = {:granted => true}
       end
 
-      arg_attrs = attrs_and_args.collect {|a| a.to_sym}
+      arg_attrs = attrs_and_args.collect {|attr| attr.to_sym}
 
-      attrs = granted_attribute_hash.select {|k,v| v == args[:granted]}.collect {|k,v| k}
+      attrs = granted_attribute_hash.select {|attr,granted| granted == args[:granted]}.collect {|attr,granted| attr}
 
       if arg_attrs.length > 0
-        attrs.select {|v| arg_attrs.include? v}
+        attrs.select {|attr| arg_attrs.include? attr}
       else
         attrs
       end
@@ -32,11 +32,11 @@ module Grant
     private
 
     def granted_attribute_hash
-      grant_attributes = Hash[*self.attribute_names.collect {|c| [c.to_sym, false]}.flatten]
+      grant_attributes = Hash[*self.attribute_names.collect {|attr| [attr.to_sym, false]}.flatten]
 
       if grant_disabled?
-        grant_attributes.each_key do |k|
-          grant_attributes[k] = true
+        grant_attributes.each_key do |attr|
+          grant_attributes[attr] = true
         end
       else
         self.class.granted_permissions.each do |attrs_and_blk|
