@@ -5,8 +5,12 @@ class ActiveRecordMock
     'thing'
   end
 
-  def changed
+  def attribute_names
     ['name', 'stuff', 'other_attr']
+  end
+
+  def changed
+    ['name', 'stuff']
   end
 
   def self.before_save(method)

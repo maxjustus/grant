@@ -16,6 +16,102 @@ describe Grant::ModelAttributeSecurity do
     end
   end
 
+  describe '#granted_attributes' do
+    before do
+      c = new_model_class.instance_eval do
+        grant_attributes(:stuff, :other_attr) { true }
+        grant_attributes(:name) { false }
+        self
+      end
+      @c = c.new
+    end
+
+    it 'should list granted attributes for current_user' do
+      @c.granted_attributes.should == [:stuff, :other_attr]
+    end
+
+    it 'should list granted attributes for current_user when passed :granted => true' do
+      @c.granted_attributes(:granted => true).should == [:stuff, :other_attr]
+    end
+
+    it 'should list ungranted attributes for current_user when passed false' do
+      @c.granted_attributes(:granted => false).should == [:name]
+    end
+
+    it 'should recognize arguments as strings' do
+      @c.granted_attributes('granted' => false).should == [:name]
+    end
+
+    context 'given a list of attributes' do
+      it 'should return a limited list of attributes that are granted' do
+        @c.granted_attributes(:stuff, :other_attr, :granted => true).should == [:stuff, :other_attr]
+        @c.granted_attributes(:name, :granted => true).should == []
+      end
+
+      it 'should return a limited list of attributes that are not granted' do
+        @c.granted_attributes(:name, :granted => false).should == [:name]
+      end
+
+      it 'should recognize attributes passed in as strings' do
+        @c.granted_attributes('stuff', 'other_attr', :granted => true).should == [:stuff, :other_attr]
+      end
+    end
+
+    context 'grant_disabled' do
+      before do
+        c = new_model_class.instance_eval do
+          grant_attributes(:stuff, :other_attr) { true }
+          grant_attributes(:name) { false }
+          self
+        end
+
+        c.class_eval do
+          def grant_disabled?
+            true
+          end
+        end
+
+        @c = c.new
+      end
+
+      it 'should list all attributes as granted' do
+        @c.granted_attributes(:granted => true).should == [:name, :stuff, :other_attr]
+        @c.granted_attributes(:name, :granted => true).should == [:name]
+      end
+
+      it 'should list no attributes as ungranted' do
+        @c.granted_attributes(:granted => false).should == []
+        @c.granted_attributes(:name, :granted => false).should == []
+      end
+    end
+  end
+
+  describe '#granted_attribute?' do
+    before do
+      c = new_model_class.instance_eval do
+        grant_attributes(:stuff, :other_attr) { true }
+        grant_attributes(:name) { false }
+        self
+      end
+      @c = c.new
+    end
+
+    it 'should return true if user is granted permission for passed in attribute' do
+      @c.granted_attributes?(:stuff).should == true
+      @c.granted_attributes?(:name).should == false
+    end
+
+    context 'multiple arguments' do
+      it 'should return false when one of the attributes passed in is not granted' do
+        @c.granted_attributes?(:name, :stuff).should == false
+      end
+
+      it 'should return true when all of the attributes passed in are granted' do
+        @c.granted_attributes?(:stuff, :other_attr).should == true
+      end
+    end
+  end
+
   describe '#grant_attributes' do
     it 'should allow update of attributes specified using grant_attributes' do
       c = new_model_class.instance_eval do
