@@ -70,20 +70,35 @@ To enable model attribute security you simply include the Grant::ModelAttributeS
     end
   end
 
-You can see what attributes are granted for the current user to edit by using model.granted_attributes, useful in situations where you're using something like formtastic and want to make the form display only fields the user is granted to edit:
+You can see what attributes are granted for the current user to edit by using model.granted_attributes, this is useful in situations where you're using something like formtastic and want to make the form display only fields the user is granted to edit. You can use granted_attributes without arguments to get all granted attributes, or you can pass it a list of attributes to check, in which case it will return an array of granted attributes limited to those passed. You can also pass :granted => false to get all ungranted attributes, or a subset based on those passed in:
 
   <%= semantic_form_for book do |f| %>
-    <%= f.inputs book.granted_attributes %>
+    <%= f.inputs *book.granted_attributes(:title, :list_in_store, :price) %>
+
+    <% ungranted = book.granted_attributes(:title, :list_in_store, :price, :granted => false) %>
+    <% if ungranted.length > 0 %>
+      You are not allowed to edit
+      <%= ungranted.join(', ') %>
+    <% end %>
   <% end %>
 
 You can test whether a set of attributes is granted for the current user by using model.granted_attributes? with a list of attributes to test against:
 
   <% if book.granted_attributes?(:title) %>
     You can edit the title!
+    %p
+      f.label :title
+      f.check_box :title
   <% end %>
 
   <% if book.granted_attributes?(:list_in_store, :price) %>
     You can edit the price and whether this book is listed in the store!
+    %p
+      f.label :list_in_store
+      f.check_box :list_in_store
+    %p
+      f.label :price
+      f.text_field :price
   <% end %>
 
 It is also possible to use model security and model attribute security in conjunction. The example below grants any user the ability to find and create, but only owners and administrators to update or destroy. It also grants any user the ability to update user_id when the book is a new record, but only administrators if it is not new. It grants anyone the ability to update :title and :price if the record is new or they own it, but it only allows administrators to update the list_in_store attribute

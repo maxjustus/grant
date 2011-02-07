@@ -19,7 +19,7 @@ module Grant
       attrs = granted_attribute_hash.select {|attr,granted| granted == args[:granted]}.collect {|attr,granted| attr}
 
       if arg_attrs.length > 0
-        attrs.select {|attr| arg_attrs.include? attr}
+        arg_attrs.select {|attr| attrs.include? attr}
       else
         attrs
       end

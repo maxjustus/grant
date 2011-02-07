@@ -52,6 +52,10 @@ describe Grant::ModelAttributeSecurity do
         @c.granted_attributes(:name, :granted => false).should == [:name]
       end
 
+      it 'should return list in order it was passed in' do
+        @c.granted_attributes(:other_attr, :stuff).should == [:other_attr, :stuff]
+      end
+
       it 'should recognize attributes passed in as strings' do
         @c.granted_attributes('stuff', 'other_attr', :granted => true).should == [:stuff, :other_attr]
       end
