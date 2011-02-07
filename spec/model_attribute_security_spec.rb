@@ -35,11 +35,11 @@ describe Grant::ModelAttributeSecurity do
     end
 
     it 'should list ungranted attributes for current_user when passed false' do
-      @c.granted_attributes(:granted => false).should == [:name]
+      @c.granted_attributes(:granted => false).should == [:name, :ungranted_attr]
     end
 
     it 'should recognize arguments as strings' do
-      @c.granted_attributes('granted' => false).should == [:name]
+      @c.granted_attributes('granted' => false).should == [:name, :ungranted_attr]
     end
 
     context 'given a list of attributes' do
@@ -75,7 +75,7 @@ describe Grant::ModelAttributeSecurity do
       end
 
       it 'should list all attributes as granted' do
-        @c.granted_attributes(:granted => true).should == [:name, :stuff, :other_attr]
+        @c.granted_attributes(:granted => true).should == [:name, :stuff, :other_attr, :ungranted_attr]
         @c.granted_attributes(:name, :granted => true).should == [:name]
       end
 
@@ -152,6 +152,23 @@ describe Grant::ModelAttributeSecurity do
       end
 
       verify_standard_callbacks(c.new, :create, :update)
+    end
+
+    it 'should allow update if nothing is changed' do
+      c = new_model_class.instance_eval do
+        grant_attributes(:name) { false }
+        grant_attributes(:stuff, :other_attr) { true }
+
+        self
+      end
+      @c = c.new
+      @c.instance_eval do
+        def changed
+          []
+        end
+      end
+
+      verify_standard_callbacks(@c, :create, :update)
     end
 
     it 'should deny update of attributes where grant user may not update a changed attribute' do

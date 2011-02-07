@@ -6,7 +6,7 @@ class ActiveRecordMock
   end
 
   def attribute_names
-    ['name', 'stuff', 'other_attr']
+    ['name', 'stuff', 'other_attr', 'ungranted_attr']
   end
 
   def changed

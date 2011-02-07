@@ -76,10 +76,11 @@ module Grant
         @granted_permissions << [attributes, blk]
 
         define_method(:grant_before_save) do
-          ungranted_changed = granted_attributes(*self.changed, :granted => false)
-
-          unless (ungranted_changed).length == 0
-            grant_raise_error(grant_current_user, ungranted_changed.join(', '), self)
+          if self.changed.length > 0
+            ungranted_changed = granted_attributes(*self.changed, :granted => false)
+            unless (ungranted_changed).length == 0
+              grant_raise_error(grant_current_user, ungranted_changed.join(', '), self)
+            end
           end
         end
       end
