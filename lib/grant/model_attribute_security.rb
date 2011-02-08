@@ -21,12 +21,12 @@ module Grant
       if arg_attrs.length > 0
         arg_attrs.select {|attr| attrs.include? attr}
       else
-        attrs
+        attrs.sort {|a, a2| a.to_s <=> a2.to_s}
       end
     end
 
     def granted_attributes?(*attrs)
-      granted_attributes(*attrs, :granted => false).length == 0
+      granted_attributes(*attrs.push(:granted => false)).length == 0
     end
 
     private
@@ -77,7 +77,7 @@ module Grant
 
         define_method(:grant_before_save) do
           if self.changed.length > 0
-            ungranted_changed = granted_attributes(*self.changed, :granted => false)
+            ungranted_changed = granted_attributes(*self.changed.push(:granted => false))
             unless (ungranted_changed).length == 0
               grant_raise_error(grant_current_user, ungranted_changed.join(', '), self)
             end

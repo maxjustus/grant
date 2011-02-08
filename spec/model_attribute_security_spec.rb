@@ -26,12 +26,16 @@ describe Grant::ModelAttributeSecurity do
       @c = c.new
     end
 
+    it 'should sort returned attributes alphabetically when no attributes are passed in to filter by' do
+      @c.granted_attributes.should == [:other_attr, :stuff]
+    end
+
     it 'should list granted attributes for current_user' do
-      @c.granted_attributes.should == [:stuff, :other_attr]
+      @c.granted_attributes.should == [:other_attr, :stuff]
     end
 
     it 'should list granted attributes for current_user when passed :granted => true' do
-      @c.granted_attributes(:granted => true).should == [:stuff, :other_attr]
+      @c.granted_attributes(:granted => true).should == [:other_attr, :stuff]
     end
 
     it 'should list ungranted attributes for current_user when passed false' do
@@ -54,6 +58,7 @@ describe Grant::ModelAttributeSecurity do
 
       it 'should return list in order it was passed in' do
         @c.granted_attributes(:other_attr, :stuff).should == [:other_attr, :stuff]
+        @c.granted_attributes(:stuff, :other_attr).should == [:stuff, :other_attr]
       end
 
       it 'should recognize attributes passed in as strings' do
@@ -79,7 +84,7 @@ describe Grant::ModelAttributeSecurity do
       end
 
       it 'should list all attributes as granted' do
-        @c.granted_attributes(:granted => true).should == [:name, :stuff, :other_attr, :ungranted_attr]
+        @c.granted_attributes(:granted => true).should == [:name, :other_attr, :stuff, :ungranted_attr]
         @c.granted_attributes(:name, :granted => true).should == [:name]
       end
 
