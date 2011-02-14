@@ -29,25 +29,17 @@ module Grant
       end
 
       arg_attrs_and_actions = Grant::ConfigParser.extract_config(args, self.class)
-      arg_attrs = arg_attrs_and_actions[:attributes]
-      arg_actions = arg_attrs_and_actions[:actions]
 
       granted_attrs_and_actions = {:actions => [], :attributes => []}
 
-      grant_actions = granted_actions.select {|action,granted| granted == options[:granted]}.collect {|attr,granted| attr}
+      granted_attrs_and_actions.each_key do |k|
+        granted = eval("granted_#{k}").select {|a,granted| granted == options[:granted]}.collect {|a,granted| a}
 
-      if arg_attrs_and_actions[:actions].length > 0
-        granted_attrs_and_actions[:actions] = arg_actions.select{|a| grant_actions.include? a}
-      elsif arg_attrs.length == 0
-        granted_attrs_and_actions[:actions] = grant_actions
-      end
-
-      grant_attrs = granted_attributes.select {|attr,granted| granted == options[:granted]}.collect {|attr,granted| attr}
-
-      if arg_attrs_and_actions[:attributes].length > 0
-        granted_attrs_and_actions[:attributes] = arg_attrs.select {|attr| grant_attrs.include? attr}
-      elsif arg_actions.length == 0
-        granted_attrs_and_actions[:attributes] = grant_attrs.sort {|a, a2| a.to_s <=> a2.to_s}
+        if arg_attrs_and_actions[k].length > 0
+          granted_attrs_and_actions[k] = arg_attrs_and_actions[k].select{|a| granted.include? a}
+        elsif arg_attrs_and_actions.reject{|a| a == k}.shift[1].length == 0
+          granted_attrs_and_actions[k] = granted.sort {|a, a2| a.to_s <=> a2.to_s}
+        end
       end
 
       granted_attrs_and_actions
