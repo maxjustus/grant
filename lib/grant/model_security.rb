@@ -79,11 +79,7 @@ module Grant
           attrs = attrs_and_blk[0]
           blk = attrs_and_blk[1]
           attrs.each do |attr|
-            if blk.call(grant_current_user, self)
-              grant_attributes[attr] = true
-            else
-              grant_attributes[attr] = false
-            end
+            grant_attributes[attr] = !!blk.call(grant_current_user, self)
           end
         end
       end
