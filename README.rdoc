@@ -40,13 +40,13 @@ Grant needs to know who the current user is, but with no standard for doing so y
 
 = Usage
 
-To enable model security you simply include the Grant::ModelSecurity module in your model class. In the example below you see two grant statements. The first grants find (aka read) permission all the time. The second example grants create, update, and destroy permission when the passed block evaluates to true, which in this case happens when the model is editable by the current user. A Grant::Error is raised if any grant block evaluates to false or nil.
+To enable model security you simply include the Grant::ModelSecurity module in your model class. In the example below you see two grant statements. The first grants find (aka read) permission all the time, and permission to update every attribute all the time. The second example grants create, update, and destroy permission when the passed block evaluates to true, which in this case happens when the model is editable by the current user. A Grant::Error is raised if any grant block evaluates to false or nil.
 
   class Book < ActiveRecord::Base
     include Grant::ModelSecurity
     
     has_many :tags
-    grant(:find) { true }
+    grant(:find, :attributes => :all) { true }
     grant(:create, :update, :destroy) { |user, model| model.editable_by_user? user }
     
     def editable_by_user?(user)
@@ -54,44 +54,66 @@ To enable model security you simply include the Grant::ModelSecurity module in y
     end
   end
 
-The valid actions to pass to a grant statement are :find, :create, :update, and :destroy. Each action can be passed as a Symbol or String. Any number of actions can be passed to a single grant statement, which is very useful if each of the actions share the same logic for determining access.
+The valid actions to pass to a grant statement are :find, :create, :update, and :destroy. The valid attributes to pass to a grant statement are those which correspond to columns in the database. Each action and attribute can be passed as a Symbol or String. Any number and combination of actions and model attributes can be passed to a single grant statement, which is very useful if each of the actions and attributes share the same logic for determining access.
 
-To enable model attribute security you simply include the Grant::ModelAttributeSecurity module in your model class. In the example below you see two grant statements. The first grants permission to update the title attribute all the time. The second example grants permission to update list_in_store and price when the passed block evaluates to true, which in this case happens when the model is editable by the current user. A Grant::Error is raised if any grant block evaluates to false or nil.
+You can also use the grant method to specify granular permissions for the user to change attributes on a model. The example below grants any user the ability to find and create, but only owners and administrators to update or destroy. It also grants any user the ability to update user_id when the book is a new record, but only administrators if it is not new. It grants anyone the ability to update :title and :price if the record is new or they own it, but it only allows administrators to update the list_in_store attribute. A Grant::Error is raised if any grant block evaluates to false or nil.
 
   class Book < ActiveRecord::Base
-    include Grant::ModelAttributeSecurity
+    include Grant::ModelSecurity
     
     has_many :tags
-    grant_attributes(:title) { true }
-    grant_attributes(:list_in_store, :price) { |user, model| model.owned_by_user? user }
+    grant(:find, :create) { true }
+    grant(:update, :destroy) { |user, model| model.owned_by_user? user || user.administrator? }
+
+    grant(:title, :price) { |user, model| model.new_record? || model.owned_by_user? user }
+    grant(:user_id) { |user, model| model.new_record? || user.administrator? }
+    grant(:list_in_store) { |user, model| user.administrator? }
     
     def owned_by_user?(user)
       user.administrator? || user.owns?(self)
     end
   end
 
-You can see what attributes are granted for the current user to edit by using model.granted_attributes, this is useful in situations where you're using something like formtastic and want to make the form display only fields the user is granted to edit. You can use granted_attributes without arguments to get all granted attributes, or you can pass it a list of attributes to check, in which case it will return an array of granted attributes limited to those passed. You can also pass :granted => false to get all ungranted attributes, or a subset based on those passed in:
+If you happen to have a column name called find, create, update, or destroy you can explicitly define permissions on those attributes using the :attributes argument. This example grants permission to use the find and create actions, and to change the name, find, and create attributes
+
+    class Book < ActiveRecord::Base
+      grant(:find, :create, :attributes => [:name, :find, :create]) { true }
+    end
+
+In the event that you just want to grant permission to update all attributes you can use the argument :attributes => :all
+    class Book < ActiveRecord::Base
+      grant(:find, :create, :attributes => :all) { true }
+    end
+
+You can see what attributes and actions are granted for the current user to edit by using model.granted. This is useful in situations where you're using something like formtastic and want to make the form display only fields the user is granted to edit. You can use grantedwithout arguments to get all granted attributes and actions, or you can pass it a list of attributes and actions to check against, in which case it will return a hash of granted attributes and actions in the order of and limited to those passed. You can also pass :granted => false to get all ungranted attributes and actions, or a subset based on those passed in:
 
   <%= semantic_form_for book do |f| %>
-    <%= f.inputs *book.granted_attributes(:title, :list_in_store, :price) %>
+    <%= f.inputs *book.granted(:title, :list_in_store, :price)[:attributes] %>
 
-    <% ungranted = book.granted_attributes(:title, :list_in_store, :price, :granted => false) %>
-    <% if ungranted.length > 0 %>
+    <% ungranted = book.granted(:title, :list_in_store, :price, :granted => false) %>
+    <% if ungranted.all? {|k,v| v.length > 0} %>
       You are not allowed to edit
-      <%= ungranted.join(', ') %>
+      <%= ungranted[:attributes].join(', ') %>
+
+      and are not permitted to 
+      <%= ungranted[:actions].join(', ') %>
     <% end %>
   <% end %>
 
-You can test whether a set of attributes is granted for the current user by using model.granted_attributes? with a list of attributes to test against:
+You can test whether a set of attributes and or actions are granted for the current user by using model.granted? with a list of attributes and actions to test against:
 
-  <% if book.granted_attributes?(:title) %>
+  <% if book.granted?(:destroy, :title) %>
+    You can destroy this book and edit the title!
+  <% end %>
+
+  <% if book.granted?(:title) %>
     You can edit the title!
     %p
       f.label :title
       f.check_box :title
   <% end %>
 
-  <% if book.granted_attributes?(:list_in_store, :price) %>
+  <% if book.granted?(:list_in_store, :price) %>
     You can edit the price and whether this book is listed in the store!
     %p
       f.label :list_in_store
@@ -100,25 +122,6 @@ You can test whether a set of attributes is granted for the current user by usin
       f.label :price
       f.text_field :price
   <% end %>
-
-It is also possible to use model security and model attribute security in conjunction. The example below grants any user the ability to find and create, but only owners and administrators to update or destroy. It also grants any user the ability to update user_id when the book is a new record, but only administrators if it is not new. It grants anyone the ability to update :title and :price if the record is new or they own it, but it only allows administrators to update the list_in_store attribute
-
-  class Book < ActiveRecord::Base
-    include Grant::ModelSecurity
-    include Grant::ModelAttributeSecurity
-    
-    has_many :tags
-    grant(:find, :create) { true }
-    grant(:update, :destroy) { |user, model| model.owned_by_user? user || user.administrator? }
-
-    grant_attributes(:title, :price) { |user, model| model.new_record? || model.owned_by_user? user }
-    grant_attributes(:user_id) { |user, model| model.new_record? || user.administrator? }
-    grant_attributes(:list_in_store) { |user, model| user.administrator? }
-    
-    def owned_by_user?(user)
-      user.administrator? || user.owns?(self)
-    end
-  end
 
 = Integration
 

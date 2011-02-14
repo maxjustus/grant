@@ -1,4 +1,8 @@
 class ActiveRecordMock
+  def self.column_names
+    ['name', 'stuff', 'other_attr', 'ungranted_attr', 'create']
+  end
+
   def id; 1 end
 
   def name
@@ -6,7 +10,7 @@ class ActiveRecordMock
   end
 
   def attribute_names
-    ['name', 'stuff', 'other_attr', 'ungranted_attr']
+    ['name', 'stuff', 'other_attr', 'ungranted_attr', 'create']
   end
 
   def changed
