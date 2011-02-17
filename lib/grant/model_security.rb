@@ -125,7 +125,7 @@ module Grant
 
           define_method(:grant_before_save) do
             if self.changed.length > 0 && !grant_disabled?
-              ungranted_changed = granted_attributes(*self.changed.push(:granted => false))
+              ungranted_changed = granted(*self.changed.push(:granted => false))[:attributes]
               unless (ungranted_changed).length == 0
                 grant_raise_error(grant_current_user, ungranted_changed.join(', '), self)
               end
