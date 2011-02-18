@@ -30,17 +30,18 @@ module Grant
         options = {:granted => true}
       end
 
-      arg_attrs_and_actions = Grant::ConfigParser.extract_config(args, self.class)
-
+      args = Grant::ConfigParser.extract_config(args, self.class)
       granted_attrs_and_actions = {:actions => [], :attributes => []}
+      no_arguments = args.all? {|k,v| v.length == 0}
 
-      granted_attrs_and_actions.each_key do |k|
-        granted = eval("granted_#{k}").select {|a,granted| granted == options[:granted]}.collect {|a,granted| a}
+      args.each do |arg_type,arg_list|
+        #if arguments exist for the current key, or no arguments exist
+        if arg_list.length > 0 || no_arguments
+          #get all permissions and filter by options[:granted]
+          granted = eval("granted_#{arg_type}(args[arg_type])").select {|a,granted| granted == options[:granted]}.collect {|a,granted| a}
+          granted.sort! {|v1,v2| v1 <=> v2} if no_arguments
 
-        if arg_attrs_and_actions[k].length > 0
-          granted_attrs_and_actions[k] = arg_attrs_and_actions[k].select{|a| granted.include? a}
-        elsif arg_attrs_and_actions.reject{|a| a == k}.shift[1].length == 0
-          granted_attrs_and_actions[k] = granted.sort {|a, a2| a.to_s <=> a2.to_s}
+          granted_attrs_and_actions[arg_type] = granted
         end
       end
 
@@ -53,10 +54,13 @@ module Grant
 
     private
 
-    def granted_actions
-      grant_actions = {:create => false, :update => false, :destroy => false, :find => false}
+    def granted_actions(check_actions)
+      check_actions = check_actions.length == 0 ? [:create, :update, :destroy, :find] : check_actions
+
+      #make a hash of action names with their grant status
+      grant_actions = Hash[*check_actions.collect {|action| [action.to_sym, false]}.flatten]
       
-      grant_actions.each do |action, granted|
+      grant_actions.each_key do |action|
         callback = (action == :find ? "after_#{action}" : "before_#{action}")
         begin
           eval "grant_#{callback}"
@@ -69,8 +73,11 @@ module Grant
       grant_actions
     end
 
-    def granted_attributes
-      grant_attributes = Hash[*self.attribute_names.collect {|attr| [attr.to_sym, false]}.flatten]
+    def granted_attributes(check_attributes)
+      check_attributes = check_attributes.length == 0 ? self.attribute_names : check_attributes
+
+      #make a hash of attribute names with their grant status
+      grant_attributes = Hash[*check_attributes.collect {|attr| [attr.to_sym, false]}.flatten]
 
       if grant_disabled?
         grant_attributes.each_key do |attr|
@@ -78,10 +85,13 @@ module Grant
         end
       else
         self.class.granted_permissions.each do |attrs_and_blk|
-          attrs = attrs_and_blk[0]
-          blk = attrs_and_blk[1]
-          attrs.each do |attr|
-            grant_attributes[attr] = !!blk.call(grant_current_user, self)
+          attrs = attrs_and_blk[0].select {|a| grant_attributes.has_key?(a)}
+          if attrs.length > 0
+            blk = attrs_and_blk[1]
+            blk_result = !!blk.call(grant_current_user, self)
+            attrs.each do |attr|
+              grant_attributes[attr] = blk_result
+            end
           end
         end
       end

@@ -204,11 +204,11 @@ describe Grant::ModelSecurity do
     end
 
     it 'should list granted attributes for current_user' do
-      @c.granted[:attributes].should == [:other_attr, :stuff]
+      @c.granted[:attributes].should =~ [:other_attr, :stuff]
     end
 
     it 'should list granted attributes and actions for current_user when passed :granted => true' do
-      @c.granted(:granted => true)[:attributes].should == [:other_attr, :stuff]
+      @c.granted(:granted => true)[:attributes].should =~ [:other_attr, :stuff]
       @c.granted(:granted => true)[:actions].should == [:create]
     end
 
