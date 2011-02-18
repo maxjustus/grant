@@ -56,7 +56,14 @@ describe Grant::ModelSecurity do
         grant(:create) {false}
       end
 
-      lambda { c.new.send(:create) }.should(raise_error(Grant::Error, 'create permission not granted to :1 for resource :new'))
+      lambda { c.new.send(:create) }.should(raise_error(Grant::Error, 'create permission not granted to :1 for resource new '))
+    end
+
+    it 'should raise a grant error for nil users' do
+      Grant::User.current_user = nil
+      c = new_model_class
+
+      lambda { c.new.send(:create) }.should(raise_error(Grant::Error, 'create permission not granted to unlogged in user for resource :1'))
     end
     
     it 'should allow multiple callbacks to be specified with one grant statement' do

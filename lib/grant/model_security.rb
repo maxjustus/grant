@@ -13,10 +13,11 @@ module Grant
     end
     
     def grant_raise_error(user, action, model, association_id=nil)
-      model_name = model.id ? model.id : 'new'
+      user_name = user != nil ? "#{user.class.name}:#{user.id}" : "unlogged in user"
+      model_name = model.id ? "#{model.class.name}:#{model.id}" : "new #{model.class.name}"
       msg = ["#{action} permission",
-        "not granted to #{user.class.name}:#{user.id}",
-        "for resource #{model.class.name}:#{model_name}"]
+        "not granted to #{user_name}",
+        "for resource #{model_name}"]
 
       raise Grant::Error.new(msg.join(' '))
     end
