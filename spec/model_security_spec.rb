@@ -42,6 +42,22 @@ describe Grant::ModelSecurity do
       c = new_model_class.instance_eval { grant(:destroy) { true }; self }
       verify_standard_callbacks(c.new, :destroy)
     end
+
+    it 'should raise a grant error for unsaved models' do
+      c = new_model_class.class_eval do
+        def id
+          nil
+        end
+
+        self
+      end
+
+      c.instance_eval do
+        grant(:create) {false}
+      end
+
+      lambda { c.new.send(:create) }.should(raise_error(Grant::Error, 'create permission not granted to :1 for resource :new'))
+    end
     
     it 'should allow multiple callbacks to be specified with one grant statement' do
       c = new_model_class.instance_eval { grant(:create, :update, :attributes => :all) { true }; self }
