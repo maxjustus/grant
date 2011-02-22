@@ -35,28 +35,28 @@ describe Grant::ConfigParser do
     end
 
     it "should parse actions with attributes specified using :attributes" do
-      config = Grant::ConfigParser.extract_config([:create, :attributes => [:name, :stuff]], @resource)
+      config = Grant::ConfigParser.extract_config([:create, {:attributes => [:name, :stuff]}], @resource)
       config[:attributes].should =~ [:name, :stuff]
       config[:actions].should =~ [:create]
     end
 
     it "should parse actions with attributes specified using :attributes and as normal arguments" do
-      config = Grant::ConfigParser.extract_config([:create, :stuff, :attributes => [:create, :stuff]], @resource)
+      config = Grant::ConfigParser.extract_config([:create, :stuff, {:attributes => [:create, :stuff]}], @resource)
       config[:attributes].should =~ [:create, :stuff]
       config[:actions].should =~ [:create]
     end
 
     it "should parse :attributes => :all and return every attribute" do
-      config = Grant::ConfigParser.extract_config([:create, :attributes => :all], @resource)
+      config = Grant::ConfigParser.extract_config([:create, {:attributes => :all}], @resource)
       config[:attributes].should =~ @resource.column_names.collect {|c| c.to_sym}
 
-      config = Grant::ConfigParser.extract_config(['create', 'attributes' => 'all'], @resource)
+      config = Grant::ConfigParser.extract_config(['create', {'attributes' => 'all'}], @resource)
       config[:actions].should =~ [:create]
       config[:attributes].should =~ @resource.column_names.collect {|c| c.to_sym}
     end
 
     it "should parse actions with attributes specified using :attributes which are identical to action names" do
-      config = Grant::ConfigParser.extract_config([:create, :update, :attributes => [:create]], @resource)
+      config = Grant::ConfigParser.extract_config([:create, :update, {:attributes => [:create]}], @resource)
       config[:attributes].should =~ [:create]
       config[:actions].should =~ [:create, :update]
     end

@@ -39,7 +39,7 @@ module Grant
         if arg_list.length > 0 || no_arguments
           #get all permissions and filter by options[:granted]
           granted = eval("granted_#{arg_type}(args[arg_type])").select {|a,granted| granted == options[:granted]}.collect {|a,granted| a}
-          granted.sort! {|v1,v2| v1 <=> v2} if no_arguments
+          granted.sort! {|v1,v2| v1.to_s <=> v2.to_s} if no_arguments
 
           granted_attrs_and_actions[arg_type] = granted
         end
@@ -77,20 +77,26 @@ module Grant
       check_attributes = check_attributes.length == 0 ? self.attribute_names : check_attributes
 
       #make a hash of attribute names with their grant status
-      grant_attributes = Hash[*check_attributes.collect {|attr| [attr.to_sym, false]}.flatten]
+      grant_attributes = check_attributes.collect {|attr| [attr.to_sym, false]}
 
       if grant_disabled?
-        grant_attributes.each_key do |attr|
-          grant_attributes[attr] = true
+        grant_attributes.each_with_index do |attr, index|
+          attr[1] = true
+          grant_attributes[index] = attr
         end
       else
         self.class.granted_permissions.each do |attrs_and_blk|
-          attrs = attrs_and_blk[0].select {|a| grant_attributes.has_key?(a)}
+          attrs = attrs_and_blk[0].select {|a| grant_attributes.assoc(a)}
           if attrs.length > 0
             blk = attrs_and_blk[1]
             blk_result = !!blk.call(grant_current_user, self)
             attrs.each do |attr|
-              grant_attributes[attr] = blk_result
+              grant_attributes.each_with_index do |grant_attr, index|
+                if grant_attr[0] == attr.to_sym
+                  grant_attr[1] = blk_result
+                  grant_attributes[index] = grant_attr
+                end
+              end
             end
           end
         end
