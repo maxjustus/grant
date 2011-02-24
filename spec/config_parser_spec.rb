@@ -60,6 +60,14 @@ describe Grant::ConfigParser do
       config[:attributes].should =~ [:create]
       config[:actions].should =~ [:create, :update]
     end
+
+    it 'should not access model column_names method if table does not exist' do
+      ActiveRecordMock.should_receive(:table_exists?).at_least(:once).and_return(false)
+      ActiveRecordMock.should_not_receive(:column_names)
+      resource = @resource
+
+      Grant::ConfigParser.extract_config([:create, {:attributes => :all}], resource)
+    end
   end
   
   describe 'Configuration Validation' do
@@ -83,6 +91,14 @@ describe Grant::ConfigParser do
         Grant::ConfigParser.instance_eval { validate_config({:actions => [:create], :attributes => [:guy, :stuff]}, resource) }
       }.should raise_error(Grant::Error)
     end
+
+    it "should not raise a Grant::Error if the table does not exist" do
+      ActiveRecordMock.should_receive(:table_exists?).at_least(:once).and_return(false)
+      resource = @resource
+
+      lambda {
+        Grant::ConfigParser.instance_eval { validate_config({:actions => [:create], :attributes => [:guy, :stuff]}, resource) }
+      }.should_not raise_error(Grant::Error)
+    end
   end
-  
 end

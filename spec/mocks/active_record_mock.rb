@@ -1,4 +1,10 @@
 class ActiveRecordMock
+  class NonexistentRecordError < StandardError; end
+
+  def self.table_exists?
+    true
+  end
+
   def self.column_names
     ['name', 'stuff', 'other_attr', 'ungranted_attr', 'create']
   end

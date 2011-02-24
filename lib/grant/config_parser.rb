@@ -16,7 +16,11 @@ module Grant
             attrs = item[:attributes] ? item[:attributes] : item['attributes']
 
             if !attrs.kind_of?(Array) && attrs.to_sym == :all
-              attrs = resource.column_names.collect {|c| c.to_sym}
+              if resource.table_exists?
+                attrs = resource.column_names.collect {|c| c.to_sym}
+              else
+                attrs = []
+              end
             end
 
             normalized_args[:attributes] << attrs
@@ -47,8 +51,10 @@ module Grant
 
         raise Grant::Error.new(":create, :find, :update, and :destroy are the only valid actions") unless args[:actions].all? { |a| [:create, :find, :update, :destroy].include? a }
 
-        attribute_names = resource.column_names
-        raise Grant::Error.new(attribute_names.join(', ') + " are the only valid attributes") unless args[:attributes].all? { |a| attribute_names.include? a.to_s }
+        if resource.table_exists?
+          attribute_names = resource.column_names
+          raise Grant::Error.new(attribute_names.join(', ') + " are the only valid attributes") unless args[:attributes].all? { |a| attribute_names.include? a.to_s }
+        end
       end
      
   end
